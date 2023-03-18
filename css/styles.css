@@ -1,0 +1,130 @@
+*,
+*:after,
+*::before {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+}
+
+main {
+  padding: 20px 40px;
+}
+
+form {
+  margin-bottom: 20px;
+}
+
+.form__row:first-of-type {
+  margin-bottom: 20px;
+}
+
+.file__block {
+  display: flex;
+  flex-direction: column;
+}
+
+.input__file {
+  position: absolute;
+  z-index: -1;
+  opacity: 0;
+  overflow: hidden;
+  width: 0.1px;
+  height: 0.1px;
+}
+
+.input__file + label {
+  display: block;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background-color: #3c3757;
+  width: 250px;
+  padding: 10px 10px;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #ffffff;
+  text-align: center;
+}
+
+.input__file:focus + label,
+.input__file + label:hover {
+  background-color: #374072;
+}
+
+.input__file + label {
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.input__file:focus + label {
+  outline: none;
+  border-color: #0e0b1f;
+}
+
+#submit {
+  border: none;
+  border-radius: 6px;
+  background-color: #16751b;
+  padding: 10px 10px;
+  font-size: 1.25em;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+#submit:hover {
+  background-color: #219927;
+}
+
+#submit:active {
+  background-color: #053307;
+}
+
+.list li {
+  color: #0d043f;
+  font-weight: 700;
+}
+
+/*table*/
+.cd__data {
+  margin-bottom: 35px;
+  width: 800px;
+}
+
+table {
+  font-size: 18px;
+}
+
+.date__cell {
+  border: 2px solid #131010;
+  background-color: grey;
+  width: 200px;
+  padding: 5px;
+}
+
+.bank__header,
+.client__header,
+.goods__header {
+  border: 2px solid #131010;
+  background-color: grey;
+  padding: 5px;
+  text-align: center;
+}
+
+.bank__table {
+  width: 800px;
+}
+
+.body__cell,
+.bank__cell,
+.client__cell,
+.goods__cell {
+  border: 2px solid #131010;
+  padding: 5px;
+}
+
+.good__order {
+  background-color: grey;
+}
