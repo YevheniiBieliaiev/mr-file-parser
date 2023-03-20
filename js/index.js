@@ -1,13 +1,13 @@
-//Parser instance
+//PARSER INSTANCE
 const stringParser = new DOMParser();
 
-//get DOM elements
+//GET DOM ELEMENTS
 const inputFile = document.querySelector('#file');
 const submit = document.querySelector('#submit');
 const filesList = document.querySelector('.list');
 const result = document.querySelector('.result');
 
-//event listener for file list
+//EVENT LISTENER FOR FILE LIST
 inputFile.addEventListener('change', addFilesList);
 
 async function addFilesList() {
@@ -25,7 +25,7 @@ async function addFilesList() {
   }
 }
 
-//event listener for parsing
+//EVENT LISTENER FOR PARSING
 const target = document.querySelector('#root');
 submit.addEventListener('click', parser);
 
@@ -34,7 +34,7 @@ async function parser(event) {
 
   const curFiles = inputFile.files;
   const files = Array.from(curFiles).map((file) => {
-    let reader = new FileReader();
+    const reader = new FileReader();
 
     return new Promise((resolve) => {
       reader.onload = () => resolve(reader.result);
@@ -50,81 +50,74 @@ async function parser(event) {
 
   parsedToXml.forEach((file) => {
     const cds = file.querySelectorAll('ccd_main');
-    cds.forEach((it) => {
-      cd(it);
+    cds.forEach((xml) => {
+      cd(xml);
     });
   });
 }
 
-//data tables
+//DATA TABLES
 function cd(fileElem) {
   const cd = document.createElement('div');
   cd.className = 'cd__data';
+
+  const cdTable = document.createElement('table');
+  cd.append(cdTable);
+
   result.append(cd);
 
-  cdHeader(fileElem, cd);
-  cdBody(fileElem, cd);
-  cdBank(fileElem, cd);
-  cdClient(fileElem, cd);
-  cdGoods(fileElem, cd);
+  cdHeader(fileElem, cdTable);
+  cdBody(fileElem, cdTable);
 }
 
-//header - dates info
-function cdHeader(fileElem, parentNode) {
-  const divider = document.createElement('div');
-  divider.className = 'cd_dates';
-  const cdHeader = document.createElement('table');
-  cdHeader.className = 'date__table';
-  divider.append(cdHeader);
-
-  const tdValue = {
+//HEADER - dates info
+function cdHeader(fileElem, table) {
+  const cellKeys = {
     ccd_submitted: 'Дата прийняття МД до митного оформлення',
     ccd_registered: 'Дата та час оформлення МД',
     ccd_cancelled: 'Дата анулювання',
     ccd_modified: 'Дата останнього змінення МД',
   };
 
-  const trHeader = document.createElement('tr');
-  trHeader.className = 'dates';
+  const tHead = document.createElement('thead');
+  table.append(tHead);
 
-  for (let key in tdValue) {
-    const td = document.createElement('td');
-    td.textContent = tdValue[key];
-    td.classList.add(key, 'date__cell');
-    trHeader.append(td);
-    cdHeader.append(trHeader);
-  }
+  const trKey = document.createElement('tr');
+  trKey.classList.add('cell', 'cd__date');
+
+  const trHeader = document.createElement('tr');
+  trHeader.classList.add('cell', 'cd__date');
 
   const trDateValue = document.createElement('tr');
-  trDateValue.className = 'dates';
+  trDateValue.classList.add('cell', 'cd__date');
 
-  for (let key in tdValue) {
-    const td = document.createElement('td');
-    const cellValue = fileElem.querySelector(`${key}`)?.textContent;
-    td.textContent = cellValue ? dateFormat(cellValue) : '';
-    td.classList.add(key, 'date__cell');
-    trDateValue.append(td);
-    cdHeader.append(trDateValue);
+  tHead.append(trKey, trHeader, trDateValue);
+
+  for (let filed in cellKeys) {
+    const tdKey = document.createElement('td');
+    tdKey.textContent = filed;
+    tdKey.classList.add('cell', 'cd__date');
+    trKey.append(tdKey);
+
+    const tdHeader = document.createElement('td');
+    tdHeader.textContent = cellKeys[filed];
+    tdHeader.classList.add('cell', 'cd__date');
+    trHeader.append(tdHeader);
+
+    const tdValue = document.createElement('td');
+    const cellValue = fileElem.querySelector(filed)?.textContent;
+    tdValue.textContent = cellValue ? dateFormat(cellValue) : '';
+    tdValue.classList.add('cell', 'cd__date');
+    trDateValue.append(tdValue);
   }
 
-  parentNode.append(divider);
+  table.append(tHead);
 }
 
-function dateFormat(date) {
-  const year = date.slice(0, 4);
-  const month = date.slice(4, 6);
-  const day = date.slice(6, 8);
-
-  const hours = date.slice(9, 11);
-  const minutes = date.slice(11, 13);
-  const seconds = date.slice(13);
-
-  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-}
-
+//BODY
 //body - main info of cd
-function cdBody(fileElem, parentNode) {
-  const keys = {
+function cdBody(fileElem, table) {
+  const cellKeys = {
     MRN: 'Унікальний номер МД (Тільки для МД, оформлених після 01.10.2022)',
     ccd_status: 'Статус МД',
     ccd_01_01: 'Тип МД (IM,  EK)',
@@ -146,20 +139,19 @@ function cdBody(fileElem, parentNode) {
     ccd_24_01: 'Код характеру угоди',
   };
 
-  const divider = document.createElement('div');
-  divider.className = 'cd__body';
-  const table = document.createElement('table');
-  divider.append(table);
+  const tBody = document.createElement('tbody');
 
-  for (let field in keys) {
+  createSectionHeader('Інформація по митній декларації', tBody);
+
+  for (let field in cellKeys) {
     const tr = document.createElement('tr');
-    const tdField = document.createElement('td');
-    tdField.textContent = keys[field];
-    tdField.classList.add(field, 'body__cell');
-    tr.append(tdField);
+
+    createKeyTd(tr, field);
+    createTextFieldTd(tr, cellKeys[field]);
 
     const tdValue = document.createElement('td');
-    const cellValue = fileElem.querySelector(`${field}`)?.textContent;
+    tdValue.className = 'cell';
+    const cellValue = fileElem.querySelector(field)?.textContent;
     tdValue.textContent =
       cellValue === 'R'
         ? 'R - оформлена'
@@ -169,111 +161,124 @@ function cdBody(fileElem, parentNode) {
         ? cellValue
         : '';
 
-    tdValue.classList.add(field, 'body__cell');
     tr.append(tdValue);
-
-    table.append(tr);
+    tBody.append(tr);
   }
 
-  contractData(fileElem, table);
+  contractData(fileElem, tBody);
+  cdBank(fileElem, tBody);
+  cdClient(fileElem, tBody);
+  cdGoods(fileElem, tBody);
 
-  parentNode.append(divider);
+  table.append(tBody);
 }
 
-function contractData(fileElem, table) {
-  const keys = {
+//body - contract data
+function contractData(fileElem, tBody) {
+  const cellKeys = {
     ccd_doc_name: 'Номер контракту',
     ccd_doc_date_beg: 'Дата контракту',
   };
 
   const docsNodes = fileElem.querySelectorAll('ccd_doc');
   const contractNode = Array.from(docsNodes);
-  const filtered = contractNode.filter((node) => {
-    const child = node.querySelector('ccd_doc_code');
-    if (child.textContent === '4104' || child.textContent === '4100') {
+  const filtered = contractNode.find((node) => {
+    const childNode = node.querySelector('ccd_doc_code');
+    if (childNode.textContent === '4104' || childNode.textContent === '4100') {
       return node;
     }
   });
-  renderContract(keys, filtered[0], table);
-}
 
-function renderContract(keys, nodeArray, table) {
-  for (let field in keys) {
+  for (let field in cellKeys) {
     const tr = document.createElement('tr');
-    const tdField = document.createElement('td');
-    tdField.className = 'body__cell';
-    tdField.textContent = keys[field];
-    tr.append(tdField);
+
+    createKeyTd(tr, field);
+    createTextFieldTd(tr, cellKeys[field]);
 
     const tdValue = document.createElement('td');
-    const value = nodeArray.querySelector(`${field}`)?.textContent;
-    tdValue.className = 'body__cell';
+    tdValue.className = 'cell';
+    const value = filtered.querySelector(field)?.textContent;
     tdValue.textContent = value ? value : '';
     if (field === 'ccd_doc_date_beg') {
       tdValue.textContent = contractDate(value);
     }
+
     tr.append(tdValue);
 
-    table.append(tr);
+    tBody.append(tr);
   }
 }
 
-function contractDate(date) {
-  const year = date.slice(0, 4);
-  const month = date.slice(4, 6);
-  const day = date.slice(6);
-
-  return `${day}.${month}.${year}`;
-}
-
-//bank details
-function cdBank(fileElem, parentNode) {
-  const keys = {
-    ccd_bn_cnt: 'Країна банку',
-    ccd_bn_name: 'Назва банку',
-    ccd_bn_adr: 'Адреса банку',
-    ccd_bn_code: 'Код ЄДРПОУ банку',
+//body - bank details
+function cdBank(fileElem, tBody) {
+  const cellKeys = {
     ccd_bn_mfo: 'МФО банку',
   };
 
+  createSectionHeader('Банківські реквізити', tBody);
+
   const bankNode = fileElem.querySelector('ccd_bank');
 
-  const divider = document.createElement('div');
-  divider.className = 'cd__bank';
-  const table = document.createElement('table');
-  table.className = 'bank__table';
-  divider.append(table);
-
-  const header = document.createElement('tr');
-  const tdHeader = document.createElement('td');
-  tdHeader.className = 'bank__header';
-  tdHeader.textContent = 'Банківські реквізити';
-  header.append(tdHeader);
-  table.append(header);
-
-  for (let field in keys) {
+  for (let field in cellKeys) {
     const tr = document.createElement('tr');
 
-    const tdField = document.createElement('td');
-    tdField.className = 'bank__cell';
-    tdField.textContent = keys[field];
-    tr.append(tdField);
+    createKeyTd(tr, field);
+    createTextFieldTd(tr, cellKeys[field]);
 
     const tdValue = document.createElement('td');
-    tdValue.className = 'bank__cell';
-    const cellValue = bankNode.querySelector(`${field}`)?.textContent;
+    tdValue.className = 'cell';
+    const cellValue = bankNode.querySelector(field)?.textContent;
     tdValue.textContent = cellValue ? cellValue : '';
+
     tr.append(tdValue);
 
-    table.append(tr);
+    tBody.append(tr);
   }
-
-  parentNode.append(divider);
 }
 
-//client details
-function cdClient(fileElem, parentNode) {
-  const keys = {
+//body - goods details
+function cdGoods(fileElem, tBody) {
+  const cellKeys = {
+    ccd_32_01: 'Номер товару',
+    ccd_33_01: 'Код товару за УКТЗЕД',
+  };
+
+  createSectionHeader('Товари', tBody);
+
+  const goodsNodes = fileElem.querySelectorAll('ccd_goods');
+
+  goodsNodes.forEach((node) => {
+    goodsDetails(cellKeys, node, tBody);
+  });
+}
+
+function goodsDetails(keyList, parsedNode, parentNode) {
+  for (let field in keyList) {
+    const tr = document.createElement('tr');
+
+    const classes = field === 'ccd_32_01' ? 'cell good__order' : 'cell';
+
+    createKeyTd(tr, field, classes);
+    createTextFieldTd(tr, keyList[field], classes);
+
+    const tdValue = document.createElement('td');
+    tdValue.className = classes;
+    const value = parsedNode.querySelector(field)?.textContent;
+    tdValue.textContent = value ? value : '';
+
+    if (field === 'ccd_33_01') {
+      value ? (tdValue.textContent = goodCodeFormat(value)) : '';
+    }
+
+    tr.append(tdValue);
+
+    parentNode.append(tr);
+  }
+}
+
+//body - parties
+function cdClient(fileElem, tBody) {
+  const cellKeys = {
     ccd_cl_gr: 'Графа клієнта в МД',
     ccd_cl_cnt: 'Країна клієнта',
     ccd_cl_uori: 'Код ЄДРПОУ/ДРФО',
@@ -281,48 +286,85 @@ function cdClient(fileElem, parentNode) {
     ccd_cl_adr: 'Адреса клієнта',
   };
 
+  createSectionHeader(
+    'Особи, що здійснюють операції з товарами (клієнти)',
+    tBody
+  );
+
   const clientNodes = fileElem.querySelectorAll('ccd_client');
 
-  const divider = document.createElement('div');
-  divider.className = 'cd__client';
-  const table = document.createElement('table');
-  table.className = 'client__table';
-  divider.append(table);
+  const entries = Array.from(clientNodes).reduce(
+    (acc, node) => {
+      if (node.querySelector('ccd_cl_gr').textContent === '2') {
+        acc['2'].length ? (acc['2'][0] = node) : acc['2'].push(node);
+      }
+      if (node.querySelector('ccd_cl_gr').textContent === '8') {
+        acc['8'].length ? (acc['8'][0] = node) : acc['8'].push(node);
+      }
+      if (node.querySelector('ccd_cl_gr').textContent === '9') {
+        acc['9'].push(node);
+      }
 
-  const header = document.createElement('tr');
-  const tdHeader = document.createElement('td');
-  tdHeader.className = 'client__header';
-  tdHeader.textContent = 'Особи, що здійснюють операції з товарами (клієнти)';
-  header.append(tdHeader);
-  table.append(header);
+      return acc;
+    },
+    {
+      2: [],
+      8: [],
+      9: [],
+    }
+  );
 
-  clientNodes.forEach((node) => {
-    clientDetails(keys, node, table);
-  });
-
-  parentNode.append(divider);
+  Object.values(entries)
+    .flat()
+    .forEach((node) => {
+      clientDetails(cellKeys, node, tBody);
+    });
 }
 
-function clientDetails(keyList, parsedNode, parentNode) {
-  for (let field in keyList) {
+function clientDetails(cellKeys, parsedNode, tBody) {
+  const subCellKeys = {
+    2: 'ВІДПР: ',
+    8: 'ОТР: ',
+    9: 'ВАЛ.РЕГ.: ',
+  };
+
+  const statusKeys = {
+    2: 'Відправник',
+    8: 'Отримувач',
+    9: 'Особа відповідальна за фінансове врегулювання',
+  };
+
+  let tmpDescr = '';
+  let tmpStatus = '';
+
+  const partStatus = parsedNode.querySelector('ccd_cl_gr')?.textContent;
+  partStatus === '2'
+    ? ((tmpDescr = subCellKeys['2']), (tmpStatus = statusKeys['2']))
+    : partStatus === '8'
+    ? ((tmpDescr = subCellKeys['8']), (tmpStatus = statusKeys['8']))
+    : partStatus === '9'
+    ? ((tmpDescr = subCellKeys['9']), (tmpStatus = statusKeys['9']))
+    : '';
+
+  for (let field in cellKeys) {
     const tr = document.createElement('tr');
 
-    const tdField = document.createElement('td');
-    tdField.className = 'client__cell';
-    tdField.textContent = keyList[field];
-    tr.append(tdField);
+    const classes = field === 'ccd_cl_gr' ? 'cell part' : 'cell';
+
+    createKeyTd(tr, field, classes);
+    createTextFieldTd(tr, `${tmpDescr + cellKeys[field]}`, classes);
 
     const tdValue = document.createElement('td');
-    tdValue.className = 'client__cell';
-    const cellValue = parsedNode.querySelector(`${field}`)?.textContent;
+    tdValue.className = classes;
+    const cellValue = parsedNode.querySelector(field)?.textContent;
 
     tdValue.textContent =
       cellValue === '2'
-        ? '2 - Відправник'
+        ? `2 - ${tmpStatus}`
         : cellValue === '8'
-        ? '8 - Отримувач'
+        ? `8 - ${tmpStatus}`
         : cellValue === '9'
-        ? '9 - Особа відповіда-льна за фінансове врегулювання'
+        ? `9 - ${tmpStatus}`
         : cellValue
         ? cellValue
         : '';
@@ -333,75 +375,64 @@ function clientDetails(keyList, parsedNode, parentNode) {
 
     tr.append(tdValue);
 
-    parentNode.append(tr);
+    tBody.append(tr);
   }
 }
 
-//goods details
-function cdGoods(fileElem, parentNode) {
-  const keys = {
-    ccd_32_01: 'Номер товару',
-    ccd_31_04: 'Кількість в додаткових одиницях виміру',
-    ccd_33_01: 'Код товару за УКТЗЕД',
-    ccd_37_01: 'Процедура (код митного режиму)',
-    ccd_37_02: 'Процедура (код попереднього митного режиму)',
-    ccd_37_03: 'Процедура (особливості переміщення товару)',
-    ccd_37_04: 'Додаткова процедура',
-    ccd_38_01: 'Вага нетто',
-    ccd_41_01: 'Код додаткової одиниці виміру',
-    ccd_42_01: 'Фактурна вартість товару в валюті',
-    ccd_42_02: 'Фактурна вартість товару в валюті з урахуванням добавок',
-    ccd_45_01: 'Митна вартість товару',
-  };
-
-  const goodsNodes = fileElem.querySelectorAll('ccd_goods');
-
-  const divider = document.createElement('div');
-  divider.className = 'cd__goods';
-  const table = document.createElement('table');
-  table.className = 'goods__table';
-  divider.append(table);
-
-  const header = document.createElement('tr');
-  const tdHeader = document.createElement('td');
-  tdHeader.className = 'goods__header';
-  tdHeader.textContent = 'Товари';
-  header.append(tdHeader);
-  table.append(header);
-
-  goodsNodes.forEach((node) => {
-    goodsDetails(keys, node, table);
-  });
-
-  parentNode.append(divider);
+//HELPERS
+//section header
+function createSectionHeader(sectionName, parentNode) {
+  const sectionTr = document.createElement('tr');
+  sectionTr.className = 'table__section';
+  const sectionTd = document.createElement('td');
+  sectionTd.className = 'cell';
+  sectionTd.setAttribute('colspan', 4);
+  sectionTd.textContent = sectionName;
+  sectionTr.append(sectionTd);
+  parentNode.append(sectionTr);
 }
 
-function goodsDetails(keyList, parsedNode, parentNode) {
-  for (let field in keyList) {
-    const tr = document.createElement('tr');
-
-    const tdField = document.createElement('td');
-    tdField.className =
-      field === 'ccd_32_01' ? 'goods__cell good__order' : 'goods__cell';
-    tdField.textContent = keyList[field];
-    tr.append(tdField);
-
-    const tdValue = document.createElement('td');
-    tdValue.className =
-      field === 'ccd_32_01' ? 'goods__cell good__order' : 'goods__cell';
-    const cellValue = parsedNode.querySelector(`${field}`)?.textContent;
-
-    tdValue.textContent = cellValue ? cellValue : '';
-
-    if (field === 'ccd_33_01') {
-      cellValue ? (tdValue.textContent = goodCodeFormat(cellValue)) : '';
-    }
-    tr.append(tdValue);
-
-    parentNode.append(tr);
-  }
+//tdKey
+function createKeyTd(tr, key, customClasses = 'cell') {
+  const td = document.createElement('td');
+  td.className = customClasses;
+  td.textContent = key;
+  tr.append(td);
 }
 
+//tdField
+function createTextFieldTd(tr, field, customClasses = 'cell') {
+  const td = document.createElement('td');
+  td.className = customClasses;
+  td.setAttribute('colspan', 2);
+  td.textContent = field;
+  tr.append(td);
+}
+
+//FORMATTING FEATURES
+//date DD.MM.YYYY HH:MM:SS
+function dateFormat(date) {
+  const year = date.slice(0, 4);
+  const month = date.slice(4, 6);
+  const day = date.slice(6, 8);
+
+  const hours = date.slice(9, 11);
+  const minutes = date.slice(11, 13);
+  const seconds = date.slice(13);
+
+  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+}
+
+//date DD.MM.YYYY
+function contractDate(date) {
+  const year = date.slice(0, 4);
+  const month = date.slice(4, 6);
+  const day = date.slice(6);
+
+  return `${day}.${month}.${year}`;
+}
+
+//code of good - NNNN NN NN NN
 function goodCodeFormat(code) {
   const main = code.slice(0, 4);
   const sub_1 = code.slice(4, 6);

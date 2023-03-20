@@ -88,43 +88,40 @@ form {
 }
 
 /*table*/
+.result {
+  margin: auto;
+  width: 840px;
+}
 .cd__data {
-  margin-bottom: 35px;
-  width: 800px;
+  margin-bottom: 45px;
+  font-size: 18px;
+  line-height: 20px;
 }
 
 table {
-  font-size: 18px;
+  border-spacing: 0px;
+  border-collapse: collapse;
 }
 
-.date__cell {
-  border: 2px solid #131010;
-  background-color: grey;
-  width: 200px;
-  padding: 5px;
-}
-
-.bank__header,
-.client__header,
-.goods__header {
-  border: 2px solid #131010;
-  background-color: grey;
-  padding: 5px;
+thead {
+  background: #98b6f7;
+  font-weight: bold;
   text-align: center;
 }
 
-.bank__table {
-  width: 800px;
+.cell {
+  padding: 5px 10px;
+  border: 2px solid #18181b;
+  width: 200px;
 }
 
-.body__cell,
-.bank__cell,
-.client__cell,
-.goods__cell {
-  border: 2px solid #131010;
-  padding: 5px;
+.table__section {
+  background: #cfd5df;
+  font-weight: bold;
+  text-align: center;
 }
 
-.good__order {
-  background-color: grey;
+.good__order,
+.part {
+  background: #939396;
 }
