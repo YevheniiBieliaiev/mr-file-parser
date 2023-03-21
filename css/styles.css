@@ -90,8 +90,23 @@ form {
 /*table*/
 .result {
   margin: auto;
+  margin-bottom: 50px;
   width: 840px;
 }
+
+.modification {
+  margin: auto;
+  margin-bottom: 50px;
+  width: 840px;
+}
+
+.block__heading {
+  font-size: 16px;
+  line-height: 20px;
+  text-align: center;
+  color: #040113;
+}
+
 .cd__data {
   margin-bottom: 45px;
   font-size: 18px;

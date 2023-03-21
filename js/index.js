@@ -6,6 +6,7 @@ const inputFile = document.querySelector('#file');
 const submit = document.querySelector('#submit');
 const filesList = document.querySelector('.list');
 const result = document.querySelector('.result');
+const modification = document.querySelector('.modification');
 
 //EVENT LISTENER FOR FILE LIST
 inputFile.addEventListener('change', addFilesList);
@@ -50,8 +51,14 @@ async function parser(event) {
 
   parsedToXml.forEach((file) => {
     const cds = file.querySelectorAll('ccd_main');
+    const cdsOut = file.querySelectorAll('ccd_out');
+
     cds.forEach((xml) => {
       cd(xml);
+    });
+
+    cdsOut.forEach((xml) => {
+      modCd(xml);
     });
   });
 }
@@ -198,11 +205,12 @@ function contractData(fileElem, tBody) {
     const tdValue = document.createElement('td');
     tdValue.className = 'cell';
     const value = filtered.querySelector(field)?.textContent;
-    tdValue.textContent = value ? value : '';
-    if (field === 'ccd_doc_date_beg') {
-      tdValue.textContent = contractDate(value);
-    }
-
+    tdValue.textContent =
+      value && field === 'ccd_doc_date_beg'
+        ? contractDate(value)
+        : value
+        ? value
+        : '';
     tr.append(tdValue);
 
     tBody.append(tr);
@@ -377,6 +385,50 @@ function clientDetails(cellKeys, parsedNode, tBody) {
 
     tBody.append(tr);
   }
+}
+
+//MODOFICATIONS
+function modCd(fileElem) {
+  const cdMod = document.createElement('div');
+  cdMod.className = 'cd__data';
+
+  const cdModTable = document.createElement('table');
+  cdMod.append(cdModTable);
+
+  const cellKeys = {
+    ccd_registered: 'Дата та час оформлення МД',
+    MRN: 'Унікальний номер МД (Обов’язково заповнюється для МД, оформлених після 01.10.2022)',
+    ccd_07_01:
+      'Номер МД (код митного органу) (Обов’язково заповнюється для МД, оформлених до 01.10.2022)',
+    ccd_07_02:
+      'Номер МД (рік) (Обов’язково заповнюється для МД, оформлених до 01.10.2022)',
+    ccd_07_03:
+      'Номер МД (номер за порядком) (Обов’язково заповнюється для МД, оформлених до 01.10.2022)',
+    ccd_bn_mfo: 'МФО банку (нове)',
+    ccd_bn_mfo_prv: 'МФО банку (попереднє)',
+  };
+
+  for (let field in cellKeys) {
+    const tr = document.createElement('tr');
+
+    createKeyTd(tr, field);
+    createTextFieldTd(tr, cellKeys[field]);
+
+    const tdValue = document.createElement('td');
+    tdValue.className = 'cell';
+    const value = fileElem.querySelector(field)?.textContent;
+    tdValue.textContent =
+      value && field === 'ccd_registered'
+        ? dateFormat(value)
+        : value
+        ? value
+        : '';
+
+    tr.append(tdValue);
+    cdModTable.append(tr);
+  }
+
+  modification.append(cdMod);
 }
 
 //HELPERS
