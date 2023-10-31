@@ -187,13 +187,34 @@ function contractData(fileElem, tBody) {
     ccd_doc_date_beg: 'Дата контракту',
   };
 
+  //with the highest priority to the lowest priority
+  const priorities = [
+    '4101',
+    '4100',
+    '4104',
+    '4102',
+    '4306',
+    '4313',
+    '4314',
+    '4000',
+    '4305',
+    '4317',
+    '4317',
+    '4103',
+  ];
+
   const docsNodes = fileElem.querySelectorAll('ccd_doc');
+
   const contractNode = Array.from(docsNodes);
+
   const filtered = contractNode.find((node) => {
     const childNode = node.querySelector('ccd_doc_code');
-    if (childNode.textContent === '4104' || childNode.textContent === '4100') {
-      return node;
-    }
+
+    return priorities.find((code) => {
+      if (code === childNode.textContent) {
+        return node;
+      }
+    });
   });
 
   for (let field in cellKeys) {
@@ -288,6 +309,7 @@ function goodsDetails(keyList, parsedNode, parentNode) {
 function cdClient(fileElem, tBody) {
   const cellKeys = {
     ccd_cl_gr: 'Графа клієнта в МД',
+    ccd_cl_pos: 'Номер клієнта у графі',
     ccd_cl_cnt: 'Країна клієнта',
     ccd_cl_uori: 'Код ЄДРПОУ/ДРФО',
     ccd_cl_name: 'Назва клієнта',
@@ -303,15 +325,7 @@ function cdClient(fileElem, tBody) {
 
   const entries = Array.from(clientNodes).reduce(
     (acc, node) => {
-      if (node.querySelector('ccd_cl_gr').textContent === '2') {
-        acc['2'].length ? (acc['2'][0] = node) : acc['2'].push(node);
-      }
-      if (node.querySelector('ccd_cl_gr').textContent === '8') {
-        acc['8'].length ? (acc['8'][0] = node) : acc['8'].push(node);
-      }
-      if (node.querySelector('ccd_cl_gr').textContent === '9') {
-        acc['9'].push(node);
-      }
+      acc[node.querySelector('ccd_cl_gr').textContent].push(node);
 
       return acc;
     },
@@ -322,14 +336,13 @@ function cdClient(fileElem, tBody) {
     }
   );
 
-  Object.values(entries)
-    .flat()
-    .forEach((node) => {
-      clientDetails(cellKeys, node, tBody);
-    });
+  for (let entry in entries) {
+    let tmpClient = clientPosition(entries[entry], entry);
+    clientDetails(cellKeys, tmpClient, tBody);
+  }
 }
 
-function clientDetails(cellKeys, parsedNode, tBody) {
+function clientDetails(cellKeys, clientNode, tBody) {
   const subCellKeys = {
     2: 'ВІДПР: ',
     8: 'ОТР: ',
@@ -345,7 +358,7 @@ function clientDetails(cellKeys, parsedNode, tBody) {
   let tmpDescr = '';
   let tmpStatus = '';
 
-  const partStatus = parsedNode.querySelector('ccd_cl_gr')?.textContent;
+  const partStatus = clientNode.querySelector('ccd_cl_gr')?.textContent;
   partStatus === '2'
     ? ((tmpDescr = subCellKeys['2']), (tmpStatus = statusKeys['2']))
     : partStatus === '8'
@@ -364,14 +377,14 @@ function clientDetails(cellKeys, parsedNode, tBody) {
 
     const tdValue = document.createElement('td');
     tdValue.className = classes;
-    const cellValue = parsedNode.querySelector(field)?.textContent;
+    const cellValue = clientNode.querySelector(field)?.textContent;
 
     tdValue.textContent =
-      cellValue === '2'
+      cellValue === '2' && field !== 'ccd_cl_pos'
         ? `2 - ${tmpStatus}`
-        : cellValue === '8'
+        : cellValue === '8' && field !== 'ccd_cl_pos'
         ? `8 - ${tmpStatus}`
-        : cellValue === '9'
+        : cellValue === '9' && field !== 'ccd_cl_pos'
         ? `9 - ${tmpStatus}`
         : cellValue
         ? cellValue
@@ -387,7 +400,7 @@ function clientDetails(cellKeys, parsedNode, tBody) {
   }
 }
 
-//MODOFICATIONS
+//MODIFICATIONS
 function modCd(fileElem) {
   const cdMod = document.createElement('div');
   cdMod.className = 'cd__data';
@@ -461,7 +474,44 @@ function createTextFieldTd(tr, field, customClasses = 'cell') {
   tr.append(td);
 }
 
-//FORMATTING FEATURES
+//CLIENT POSITION
+/**
+ *
+ * @param {Array} clients client[]
+ * @param {String} type 2 || 8 || 9
+ * @returns client
+ */
+function clientPosition(clients, type) {
+  switch (type) {
+    case '2':
+      return getCLientNodeByPosition(clients, '2');
+    case '8':
+      return getCLientNodeByPosition(clients, '2');
+    case '9':
+      return getCLientNodeByPosition(clients, '1');
+  }
+}
+
+/**
+ *
+ * @param {Array} clients client[]
+ * @param {String} position 1 || 2
+ * @returns client
+ */
+function getCLientNodeByPosition(clients, position) {
+  const length = clients.length > 1;
+
+  switch (length) {
+    case true:
+      return clients.filter(
+        (cl) => cl.querySelector('ccd_cl_pos').textContent === position
+      )[0];
+    default:
+      return clients[0];
+  }
+}
+
+//FORMATTING
 //date DD.MM.YYYY HH:MM:SS
 function dateFormat(date) {
   const year = date.slice(0, 4);
