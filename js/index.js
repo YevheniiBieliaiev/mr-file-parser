@@ -205,17 +205,17 @@ function contractData(fileElem, tBody) {
 
   const docsNodes = fileElem.querySelectorAll('ccd_doc');
 
-  const contractNode = Array.from(docsNodes);
+  const contractNodes = Array.from(docsNodes);
 
-  const filtered = contractNode.find((node) => {
-    const childNode = node.querySelector('ccd_doc_code');
+  let filtered = {};
 
-    return priorities.find((code) => {
-      if (code === childNode.textContent) {
-        return node;
-      }
-    });
-  });
+  for (let code of priorities) {
+    filtered = contractNodes.find(
+      (node) => code === node.querySelector('ccd_doc_code').textContent
+    );
+
+    if (filtered) break;
+  }
 
   for (let field in cellKeys) {
     const tr = document.createElement('tr');
@@ -337,7 +337,7 @@ function cdClient(fileElem, tBody) {
   );
 
   for (let entry in entries) {
-    let tmpClient = clientPosition(entries[entry], entry);
+    const tmpClient = clientPosition(entries[entry], entry);
     clientDetails(cellKeys, tmpClient, tBody);
   }
 }
