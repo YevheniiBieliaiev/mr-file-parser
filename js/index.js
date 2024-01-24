@@ -33,6 +33,10 @@ submit.addEventListener('click', parser);
 async function parser(event) {
   event.preventDefault();
 
+  //remove prev list
+  const prevCds = document.querySelectorAll('.cd__data');
+  prevCds.forEach((cd) => cd.remove());
+
   const curFiles = inputFile.files;
   const files = Array.from(curFiles).map((file) => {
     const reader = new FileReader();
@@ -141,7 +145,7 @@ function cdBody(fileElem, table) {
     ccd_15_01: 'Код країни відправлення',
     ccd_17_01: 'Код країни призначення',
     ccd_22_01: 'Код валюти фактурної вартості',
-    ccd_22_03: 'Фактурна вартість в валюті з урахуванням добавок',
+    ccd_22_02: 'Фактурна вартість в валюті з урахуванням добавок',
     ccd_23_01: 'Kypc валюти',
     ccd_24_01: 'Код характеру угоди',
   };
@@ -270,6 +274,7 @@ function cdGoods(fileElem, tBody) {
   const cellKeys = {
     ccd_32_01: 'Номер товару',
     ccd_33_01: 'Код товару за УКТЗЕД',
+    ccd_34_01: 'Країна походження товару',
   };
 
   createSectionHeader('Товари', tBody);
@@ -359,12 +364,9 @@ function clientDetails(cellKeys, clientNode, tBody) {
   let tmpStatus = '';
 
   const partStatus = clientNode.querySelector('ccd_cl_gr')?.textContent;
-  partStatus === '2'
-    ? ((tmpDescr = subCellKeys['2']), (tmpStatus = statusKeys['2']))
-    : partStatus === '8'
-    ? ((tmpDescr = subCellKeys['8']), (tmpStatus = statusKeys['8']))
-    : partStatus === '9'
-    ? ((tmpDescr = subCellKeys['9']), (tmpStatus = statusKeys['9']))
+  partStatus
+    ? ((tmpDescr = subCellKeys[partStatus]),
+      (tmpStatus = statusKeys[partStatus]))
     : '';
 
   for (let field in cellKeys) {
@@ -380,12 +382,8 @@ function clientDetails(cellKeys, clientNode, tBody) {
     const cellValue = clientNode.querySelector(field)?.textContent;
 
     tdValue.textContent =
-      cellValue === '2' && field !== 'ccd_cl_pos'
-        ? `2 - ${tmpStatus}`
-        : cellValue === '8' && field !== 'ccd_cl_pos'
-        ? `8 - ${tmpStatus}`
-        : cellValue === '9' && field !== 'ccd_cl_pos'
-        ? `9 - ${tmpStatus}`
+      cellValue && field !== 'ccd_cl_pos'
+        ? `${cellValue} - ${tmpStatus}`
         : cellValue
         ? cellValue
         : '';
